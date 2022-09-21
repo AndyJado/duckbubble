@@ -1,0 +1,18 @@
+[[parts]]
+name = "polo"
+mat = "steel"
+
+[[parts]]
+name = "car"
+mat = "steel"
+
+[[bcs]]
+name = "fixd"
+
+[[inits]]
+name = "car"
+
+[[parts]]
+name = "soil"
+#default goes to part name, e.g. `mat = "soil"`
+
