@@ -23,8 +23,24 @@ impl Config {
 pub struct Part {
     pub name: String,
     pub id: Option<u8>,
-    pub sec: Option<String>,
-    pub mat: Option<String>,
+    sec: Option<String>,
+    mat: Option<String>,
+}
+
+impl Part {
+    pub fn sec(&self) -> &str {
+        match self.sec {
+            Some(ref s) => s,
+            None => &self.name,
+        }
+    }
+
+    pub fn mat(&self) -> &str {
+        match self.mat {
+            Some(ref m) => m,
+            None => &self.name,
+        }
+    }
 }
 
 #[derive(Debug, Default, Deserialize)]
