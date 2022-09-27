@@ -39,10 +39,11 @@ pub fn rw_key_file<P: AsRef<Path>>(path: P) -> io::Result<()> {
                     }
                     // //FIXME: write toml memory to key file, position fixed!
                     let pos = SeekFrom::Start(cursor.position());
-                    file.seek(pos)?;
-                    file.write_all(b"LIOS")?;
+                    dbg!(pos);
+                    // file.seek(pos)?;
+                    // file.write_all(b"LIOS")?;
                 }
-                Keyword::Shell => todo!(),
+                Keyword::Shell => {}
                 Keyword::Solid => {}
                 Keyword::SetNode => {}
                 Keyword::Undefined => {
@@ -99,17 +100,6 @@ fn test_newline_trim() {
     assert_eq!(trim_newline("!\r\n"), "!");
 }
 
-impl Keyword {
-    pub fn some_new(from: &str) -> Option<Self> {
-        match from {
-            "PART" => Some(Self::Part),
-            "SECTION_SHELL" => Some(Self::Shell),
-            "SECTION_SOLID" => Some(Self::Solid),
-            "SET_NODE_LIST" => Some(Self::SetNode),
-            _ => None,
-        }
-    }
-}
 // one possible implementation of walking a directory only visiting files
 pub fn visit_dirs(dir: &Path, cb: &dyn Fn(&DirEntry)) -> io::Result<()> {
     if dir.is_dir() {
@@ -126,8 +116,8 @@ pub fn visit_dirs(dir: &Path, cb: &dyn Fn(&DirEntry)) -> io::Result<()> {
     Ok(())
 }
 
-pub fn print_dir() -> io::Result<()> {
+pub fn print_dir(dir: &Path) -> io::Result<()> {
     let print_path = |f: &DirEntry| println!("{}", f.path().display());
-    visit_dirs(&Path::new("."), &print_path)?;
+    visit_dirs(dir, &print_path)?;
     Ok(())
 }
