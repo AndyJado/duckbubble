@@ -1,7 +1,6 @@
 use std::fs;
 use std::fs::DirEntry;
 use std::fs::File;
-
 use std::io;
 use std::io::prelude::*;
 use std::io::Cursor;
@@ -11,19 +10,24 @@ use std::path::Path;
 use std::str::FromStr;
 
 pub fn rw_key_file<P: AsRef<Path>>(path: P) -> io::Result<()> {
+    //curosr a file
     let stream = fs::read(&path)?;
-    let mut file = File::options().write(true).open(path)?;
     let mut cursor = Cursor::new(stream);
+    // open file for write, TODO: async
+    let mut file = File::options().write(true).open(path)?;
+    // cursor read char
     let nc = |c: &mut Cursor<Vec<u8>>| {
         let mut char_buf = [b' '; 1];
-        c.read(&mut char_buf).unwrap();
+        c.read_exact(&mut char_buf).unwrap();
         char_buf[0]
     };
+    // cursor read line
     let nl = |c: &mut Cursor<Vec<u8>>| {
         let mut buf = String::new();
         c.read_line(&mut buf).unwrap();
         buf
     };
+    // read the whole file, end with *END
     loop {
         if nc(&mut cursor) == b'*' {
             let keyword = nl(&mut cursor).parse::<Keyword>().unwrap();
@@ -36,7 +40,7 @@ pub fn rw_key_file<P: AsRef<Path>>(path: P) -> io::Result<()> {
                     // //FIXME: write toml memory to key file, position fixed!
                     let pos = SeekFrom::Start(cursor.position());
                     file.seek(pos)?;
-                    file.write(b"LIOS")?;
+                    file.write_all(b"LIOS")?;
                 }
                 Keyword::Shell => todo!(),
                 Keyword::Solid => {}
