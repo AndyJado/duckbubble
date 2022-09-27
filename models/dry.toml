@@ -6,10 +6,9 @@ mat = "steel"
 name = "car"
 mat = "steel"
 
-[[bcs]]
+[[node_sets]]
 name = "fixd"
-
-[[inits]]
+[[node_sets]]
 name = "car"
 
 [[parts]]

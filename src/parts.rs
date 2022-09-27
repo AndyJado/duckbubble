@@ -8,14 +8,19 @@ pub struct Config {
     pub parts: Vec<Part>,
     pub secs: Opvec<Section>,
     pub mats: Opvec<Material>,
+    pub node_sets: Opvec<NodeSet>,
     pub bcs: Opvec<Bc>,
     pub inits: Opvec<Init>,
+}
+
+pub enum ConfigErr {
+    Undefine,
 }
 
 impl Config {
     pub fn read(path: &str) -> Self {
         let ctn = fs::read_to_string(path).expect("!config read from toml file!");
-        toml::from_str(&ctn).expect("!toml rom str!")
+        toml::from_str(&ctn).expect("!read toml file from current dir!")
     }
 }
 
@@ -63,6 +68,12 @@ pub struct Bc {
 
 #[derive(Debug, Default, Deserialize)]
 pub struct Init {
+    pub name: String,
+    pub id: Option<u8>,
+}
+
+#[derive(Debug, Default, Deserialize)]
+pub struct NodeSet {
     pub name: String,
     pub id: Option<u8>,
 }
