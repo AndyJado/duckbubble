@@ -1,15 +1,14 @@
 use std::fs;
+use std::fs::DirEntry;
 use std::fs::File;
+
 use std::io;
 use std::io::prelude::*;
 use std::io::Cursor;
 use std::io::SeekFrom;
 use std::path::Path;
-use std::str::FromStr;
 
-fn main() -> io::Result<()> {
-    rw_key_file("solids.k")
-}
+use std::str::FromStr;
 
 pub fn rw_key_file<P: AsRef<Path>>(path: P) -> io::Result<()> {
     let stream = fs::read(&path)?;
@@ -106,4 +105,25 @@ impl Keyword {
             _ => None,
         }
     }
+}
+// one possible implementation of walking a directory only visiting files
+pub fn visit_dirs(dir: &Path, cb: &dyn Fn(&DirEntry)) -> io::Result<()> {
+    if dir.is_dir() {
+        for entry in fs::read_dir(dir)? {
+            let entry = entry?;
+            let path = entry.path();
+            if path.is_dir() {
+                visit_dirs(&path, cb)?;
+            } else {
+                cb(&entry);
+            }
+        }
+    }
+    Ok(())
+}
+
+pub fn print_dir() -> io::Result<()> {
+    let print_path = |f: &DirEntry| println!("{}", f.path().display());
+    visit_dirs(&Path::new("."), &print_path)?;
+    Ok(())
 }

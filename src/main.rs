@@ -1,5 +1,5 @@
-use duckbubble::{orwritekey::print_dir, parts::Config};
-use std::{env, path::Path};
+use duckbubble::parts::Config;
+use std::env;
 
 fn main() {
     //read toml
