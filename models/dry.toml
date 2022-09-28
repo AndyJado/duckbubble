@@ -8,8 +8,9 @@ mat = "steel"
 
 [[node_sets]]
 name = "fixd"
+
 [[node_sets]]
-name = "car"
+name = "speed"
 
 [[parts]]
 name = "soil"

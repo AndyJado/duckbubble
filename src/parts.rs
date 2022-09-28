@@ -1,5 +1,7 @@
 use serde_derive::Deserialize;
-use std::{fs, u8};
+use std::{fs, io, path::PathBuf, u8};
+
+use crate::orwritekey::DirInRepo;
 
 type Opvec<T> = Option<Vec<T>>;
 
@@ -28,8 +30,10 @@ impl Config {
 pub struct Part {
     pub name: String,
     pub id: Option<u8>,
-    sec: Option<String>,
-    mat: Option<String>,
+    pub sec: Option<String>,
+    pub secid: Option<[u8; 10]>,
+    pub mat: Option<String>,
+    pub mid: Option<[u8; 10]>,
 }
 
 impl Part {
@@ -45,6 +49,15 @@ impl Part {
             Some(ref m) => m,
             None => &self.name,
         }
+    }
+    pub fn path_to(&self, dir: DirInRepo) -> PathBuf {
+        let mut path = dir.path();
+        match dir {
+            DirInRepo::Secs => path.push(self.sec()),
+            DirInRepo::Mats => path.push(self.mat()),
+            _ => panic!("part_path to that not defined yet"),
+        }
+        path
     }
 }
 
