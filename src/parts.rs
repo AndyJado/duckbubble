@@ -1,5 +1,5 @@
 use serde_derive::Deserialize;
-use std::{fs, io, path::PathBuf, u8};
+use std::{fs, path::PathBuf, u8};
 
 use crate::orwritekey::DirInRepo;
 
@@ -58,6 +58,34 @@ impl Part {
             _ => panic!("part_path to that not defined yet"),
         }
         path
+    }
+}
+
+pub struct KeyId([u8; 10]);
+
+impl KeyId {
+    pub fn new() -> Self {
+        let mut kcell = [b'9'; 10];
+        kcell[0] = b'1';
+        KeyId(kcell)
+    }
+}
+
+impl Iterator for KeyId {
+    type Item = u64;
+
+    // FIXME: I don't think this is a smart move.
+    fn next(&mut self) -> Option<Self::Item> {
+        // parse cell to u64
+        let zro_str = String::from_utf8_lossy(&self.0);
+        let zro: u64 = zro_str.parse().expect("KeyId parse to u64");
+        let next = zro - 1;
+        let next_str = next.to_string();
+        let mut iter = next_str.bytes();
+        for i in 0..10 {
+            self.0[i] = iter.next().unwrap();
+        }
+        Some(next)
     }
 }
 

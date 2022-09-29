@@ -1,10 +1,16 @@
-use std::{io, path::Path};
+use std::{fs, io, path::Path};
 
-use duckbubble::orwritekey::{print_dir, rw_key_file};
+use duckbubble::orwritekey::KeywordReader;
 
 fn main() -> io::Result<()> {
     let path = Path::new("./dyna-repo/src/models/shells.k");
-    // print_dir(path)?;
-    rw_key_file(path)?;
+    let stream = fs::read(path)?;
+    let kdar = KeywordReader::new(stream);
+    kdar.for_each(|c| match c {
+        Some(order) => {
+            dbg!(order);
+        }
+        None => {}
+    });
     Ok(())
 }

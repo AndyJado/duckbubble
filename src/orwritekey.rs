@@ -11,6 +11,19 @@ use std::str::FromStr;
 
 pub struct KeywordReader<R: AsRef<[u8]>>(Cursor<R>);
 
+// There is no boundary check!!
+impl<R: AsRef<[u8]>> Iterator for KeywordReader<R> {
+    type Item = Option<(String, u64)>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.read_keyword_a() {
+            Keyword::Part => Some(Some(self.process_part())),
+            Keyword::End => None,
+            _ => Some(None),
+        }
+    }
+}
+
 impl<R: AsRef<[u8]>> KeywordReader<R> {
     pub fn new(stream: R) -> Self {
         KeywordReader(Cursor::new(stream))
@@ -25,8 +38,8 @@ impl<R: AsRef<[u8]>> KeywordReader<R> {
         self.0.read_line(&mut buf).expect("!reading a line!");
         buf
     }
-    pub fn seek_head(&self) -> SeekFrom {
-        SeekFrom::Start(self.0.position())
+    pub fn seek_head(&self) -> u64 {
+        self.0.position()
     }
     pub fn read_keyword_a(&mut self) -> Keyword {
         while self.read_char() != b'*' {
@@ -40,67 +53,27 @@ impl<R: AsRef<[u8]>> KeywordReader<R> {
         if self.read_char() == b'$' {
             //TODO: we can use comment line to help locating
             self.read_line();
+        } else {
+            self.0.set_position(self.seek_head() - 1)
         }
     }
     // below keyword, may have a comment line
     fn consume_title(&mut self) -> String {
         let ln = self.read_line();
-        let v: Vec<&str> = ln.split(|c| c == '-' || c == '_').collect();
-        //TODO: now only the prefix of name is taken into consideration
+        let trimed = trim_newline(&ln).trim_end();
+        let v: Vec<&str> = trimed.split(|c| c == '-' || c == '_').collect();
+        //FIXME: currently only the prefix of name is taken into consideration
         v.first().expect("keyword should has title").to_string()
     }
-    pub fn consume_keyword(&mut self, kwd: Keyword) {
-        match kwd {
-            Keyword::Part => {
-                self.consume_comment_line();
-                let name = self.consume_title();
-                //TODO: write toml read info into model
-                self.consume_comment_line();
-                dbg!(name, self.seek_head());
-            }
-            _ => {}
-        }
+    // after located keyword, return position to be rewrite
+    pub fn process_part(&mut self) -> (String, u64) {
+        self.consume_comment_line();
+        let name = self.consume_title();
+        //TODO: write toml read info into model
+        self.consume_comment_line();
+        // now we at the beginning of line keycells
+        dbg!(name, self.seek_head())
     }
-}
-
-pub fn rw_key_file<P: AsRef<Path>>(path: P) -> io::Result<()> {
-    //curosr a file
-    let stream = fs::read(&path)?;
-    let mut key_reader = KeywordReader::new(stream);
-    // open file for write, TODO: async
-    let mut file = File::options().write(true).open(path)?;
-    // cursor read char
-    // read the whole file, end with *END
-    loop {
-        if key_reader.read_char() == b'*' {
-            let keyword = key_reader.read_line().parse::<Keyword>().unwrap();
-            dbg!(&keyword);
-            match keyword {
-                Keyword::Part => {
-                    if key_reader.read_char() == b'$' {
-                        key_reader.read_line();
-                    }
-                    //FIXME: write toml memory to key file, position fixed!
-                    let pos = key_reader.seek_head();
-                    dbg!(pos);
-                    file.seek(pos)?;
-                    file.write_all(b"LIOS")?;
-                }
-                Keyword::Shell => {}
-                Keyword::Solid => {}
-                Keyword::SetNode => {}
-                Keyword::Undefined => {
-                    dbg!(&keyword);
-                }
-                Keyword::End => break,
-            }
-        }
-    }
-    Ok(())
-}
-
-fn write2part() {
-    todo!()
 }
 
 // e.g. the first cell of a keyword input is `id`
