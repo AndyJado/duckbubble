@@ -41,34 +41,66 @@ impl<R: AsRef<[u8]>> KeywordReader<R> {
     pub fn seek_head(&self) -> u64 {
         self.0.position()
     }
-    pub fn read_keyword_a(&mut self) -> Keyword {
+    pub fn seek_foward(&mut self, n: u64) {
+        self.0.set_position(self.seek_head() + n)
+    }
+    pub fn seek_back(&mut self, n: u64) {
+        self.0.set_position(self.seek_head() - n)
+    }
+    fn find_keyword(&mut self) {
         while self.read_char() != b'*' {
             continue;
         }
+    }
+    pub fn read_keyword_a(&mut self) -> Keyword {
+        self.find_keyword();
         self.read_line()
             .parse::<Keyword>()
             .expect("parse readed keyword")
     }
     fn consume_comment_line(&mut self) {
-        if self.read_char() == b'$' {
-            //TODO: we can use comment line to help locating
-            self.read_line();
-        } else {
-            self.0.set_position(self.seek_head() - 1)
+        loop {
+            if self.read_char() == b'$' {
+                //TODO: can use comment line to help locating and do hell more stuff
+                self.read_line();
+            } else {
+                //FIXME: Not tested yet
+                self.seek_back(1);
+                break;
+            }
         }
     }
-    // below keyword, may have a comment line
-    fn consume_title(&mut self) -> String {
+    fn consume_sufix(&mut self) -> String {
+        let ln = self.read_line();
+        let trimed = trim_newline(&ln).trim_end();
+        let v: Vec<&str> = trimed.split(|c| c == '-' || c == '_').collect();
+        v.last().expect("sufix of current reading line").to_string()
+    }
+    fn consume_prefix(&mut self) -> String {
         let ln = self.read_line();
         let trimed = trim_newline(&ln).trim_end();
         let v: Vec<&str> = trimed.split(|c| c == '-' || c == '_').collect();
         //FIXME: currently only the prefix of name is taken into consideration
         v.first().expect("keyword should has title").to_string()
     }
+    pub fn process_part_attri(&mut self) -> u64 {
+        self.find_keyword();
+        let pref = self.consume_prefix();
+        let s = pref.as_str();
+        match s {
+            "MAT" | "SECTION" => {
+                self.consume_comment_line();
+                self.seek_head()
+            }
+            _ => panic!("no mat or section!!"),
+        }
+        // if &self.consume_prefix() == "MAT" || "SECTION" {}
+    }
     // after located keyword, return position to be rewrite
     pub fn process_part(&mut self) -> (String, u64) {
+        // below keyword, may have a comment line
         self.consume_comment_line();
-        let name = self.consume_title();
+        let name = self.consume_prefix();
         //TODO: write toml read info into model
         self.consume_comment_line();
         // now we at the beginning of line keycells

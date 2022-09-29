@@ -1,7 +1,7 @@
 use serde_derive::Deserialize;
-use std::{fs, path::PathBuf, u8};
+use std::{fs, io, path::PathBuf, u8};
 
-use crate::orwritekey::DirInRepo;
+use crate::orwritekey::{DirInRepo, KeywordReader};
 
 type Opvec<T> = Option<Vec<T>>;
 
@@ -58,6 +58,22 @@ impl Part {
             _ => panic!("part_path to that not defined yet"),
         }
         path
+    }
+    pub fn alloc(&mut self, lord: &mut KeyId) {
+        if self.mid.is_none() {
+            lord.next().unwrap();
+            self.mid = Some(lord.0);
+        }
+        if self.secid.is_none() {
+            lord.next().unwrap();
+            self.secid = Some(lord.0);
+        }
+    }
+    pub fn index_sec(&self) -> io::Result<()> {
+        let path = self.path_to(DirInRepo::Secs);
+        let sec_stream = fs::read(path)?;
+        let mut kdar = KeywordReader::new(sec_stream);
+        Ok(())
     }
 }
 
