@@ -30,7 +30,7 @@ fn main() -> io::Result<()> {
             par.sid_allo(&mut id_gen);
             sid_map.insert(par.sec(), par.secid.unwrap());
         }
-        par_map.insert(par.name().to_uppercase(), par);
+        par_map.insert(par.name(), par);
     }
     //write to attri dirs
     for (k, v) in mid_map.iter() {
@@ -65,40 +65,35 @@ fn main() -> io::Result<()> {
             let stream = fs::read(&k_path)?;
             let mut file = File::options().write(true).open(k_path)?;
             let kdar = KeywordReader::new(stream);
-            // read the whole file, return where & who to write
+            // read the whole file, return where and who to write
             let write_vec: Vec<_> = kdar.collect();
             for order in write_vec {
                 if let Some((name, head)) = order {
                     // retrieve part from cache
+                    let name = name.to_lowercase();
+                    let fnm = name
+                        .split(|c| c == '-' || c == '_')
+                        .next()
+                        .expect("first name of part form k");
                     let par = match par_map.get(&name) {
                         Some(n) => n,
-                        None => {
-                            let fnm = name
-                                .split(|c| c == '-' || c == '_')
-                                .next()
-                                .expect("first name of part form k");
-                            par_map.get(fnm).expect("toml has matched first name")
-                        }
+                        None => par_map.get(fnm).expect("toml has matched first name"),
                     };
                     // get the duckbubble organized id
                     let mat_cell = match par.mid {
                         Some(ref mid) => mid,
-                        None => mid_map.get(&name).expect("mat in book"),
+                        None => mid_map.get(&par.mat()).expect("mat in book"),
                     };
                     let sec_cell = match par.secid {
                         Some(ref sid) => sid,
-                        None => sid_map.get(&name).expect("sec in book"),
+                        None => sid_map.get(&par.sec()).expect("sec in book"),
                     };
                     file.seek(SeekFrom::Start(head + 10))?;
                     file.write_all(&sec_cell.0)?;
-                    file.seek(SeekFrom::Current(10))?;
                     file.write_all(&mat_cell.0)?;
                 }
             }
         }
     }
-
-    //read & write to model
-    //write to main.k
     Ok(())
 }
