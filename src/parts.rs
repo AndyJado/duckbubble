@@ -1,7 +1,7 @@
 use serde_derive::Deserialize;
-use std::{fs, io, path::PathBuf, u8};
+use std::{fs, path::PathBuf, u8};
 
-use crate::orwritekey::{DirInRepo, KeywordReader};
+use crate::orwritekey::DirInRepo;
 
 type Opvec<T> = Option<Vec<T>>;
 
@@ -31,23 +31,34 @@ pub struct Part {
     pub name: String,
     pub id: Option<u8>,
     pub sec: Option<String>,
-    pub secid: Option<[u8; 10]>,
+    pub secid: Option<KeyCell>,
     pub mat: Option<String>,
-    pub mid: Option<[u8; 10]>,
+    pub mid: Option<KeyCell>,
 }
 
+// e.g. the first cell of a keyword input is `id`
+#[derive(Debug, Default, Deserialize, Clone, Copy)]
+pub struct KeyCell(pub [u8; 10]);
+
 impl Part {
-    pub fn sec(&self) -> &str {
+    pub fn name(&self) -> String {
+        self.name.to_owned()
+    }
+    fn first_name(&self) -> String {
+        let mut ast = self.name.split(|c| c == '-' || c == '_');
+        ast.next().unwrap().to_owned()
+    }
+    // if not specified, default name goes to part's first name, e.g. soil-1-2 goes to soil
+    pub fn sec(&self) -> String {
         match self.sec {
-            Some(ref s) => s,
-            None => &self.name,
+            Some(ref s) => s.clone(),
+            None => self.first_name(),
         }
     }
-
-    pub fn mat(&self) -> &str {
+    pub fn mat(&self) -> String {
         match self.mat {
-            Some(ref m) => m,
-            None => &self.name,
+            Some(ref m) => m.clone(),
+            None => self.first_name(),
         }
     }
     pub fn path_to(&self, dir: DirInRepo) -> PathBuf {
@@ -59,31 +70,27 @@ impl Part {
         }
         path
     }
-    pub fn alloc(&mut self, lord: &mut KeyId) {
+    pub fn mid_allo(&mut self, lord: &mut KeyId) {
         if self.mid.is_none() {
             lord.next().unwrap();
             self.mid = Some(lord.0);
         }
+    }
+    pub fn sid_allo(&mut self, lord: &mut KeyId) {
         if self.secid.is_none() {
             lord.next().unwrap();
             self.secid = Some(lord.0);
         }
     }
-    pub fn index_sec(&self) -> io::Result<()> {
-        let path = self.path_to(DirInRepo::Secs);
-        let sec_stream = fs::read(path)?;
-        let mut kdar = KeywordReader::new(sec_stream);
-        Ok(())
-    }
 }
 
-pub struct KeyId([u8; 10]);
+pub struct KeyId(KeyCell);
 
 impl KeyId {
     pub fn new() -> Self {
         let mut kcell = [b'9'; 10];
         kcell[0] = b'1';
-        KeyId(kcell)
+        KeyId(KeyCell(kcell))
     }
 }
 
@@ -93,13 +100,16 @@ impl Iterator for KeyId {
     // FIXME: I don't think this is a smart move.
     fn next(&mut self) -> Option<Self::Item> {
         // parse cell to u64
-        let zro_str = String::from_utf8_lossy(&self.0);
+        let zro_str = String::from_utf8_lossy(&self.0 .0);
         let zro: u64 = zro_str.parse().expect("KeyId parse to u64");
+        // do calculation
         let next = zro - 1;
+        // convert back to string
         let next_str = next.to_string();
+        // turn str into u8 iter
         let mut iter = next_str.bytes();
         for i in 0..10 {
-            self.0[i] = iter.next().unwrap();
+            self.0 .0[i] = iter.next().unwrap();
         }
         Some(next)
     }

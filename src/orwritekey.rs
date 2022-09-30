@@ -1,10 +1,8 @@
 use std::fs;
 use std::fs::DirEntry;
-use std::fs::File;
 use std::io;
 use std::io::prelude::*;
 use std::io::Cursor;
-use std::io::SeekFrom;
 use std::path::Path;
 use std::path::PathBuf;
 use std::str::FromStr;
@@ -60,7 +58,9 @@ impl<R: AsRef<[u8]>> KeywordReader<R> {
     }
     fn consume_comment_line(&mut self) {
         loop {
-            if self.read_char() == b'$' {
+            let xr = self.read_char();
+            let bad = xr == b'*' || xr == b' ';
+            if !bad {
                 //TODO: can use comment line to help locating and do hell more stuff
                 self.read_line();
             } else {
@@ -70,16 +70,9 @@ impl<R: AsRef<[u8]>> KeywordReader<R> {
             }
         }
     }
-    fn consume_sufix(&mut self) -> String {
-        let ln = self.read_line();
-        let trimed = trim_newline(&ln).trim_end();
-        let v: Vec<&str> = trimed.split(|c| c == '-' || c == '_').collect();
-        v.last().expect("sufix of current reading line").to_string()
-    }
     fn consume_prefix(&mut self) -> String {
         let ln = self.read_line();
-        let trimed = trim_newline(&ln).trim_end();
-        let v: Vec<&str> = trimed.split(|c| c == '-' || c == '_').collect();
+        let v: Vec<&str> = ln.trim().split(|c| c == '-' || c == '_').collect();
         //FIXME: currently only the prefix of name is taken into consideration
         v.first().expect("keyword should has title").to_string()
     }
@@ -94,28 +87,16 @@ impl<R: AsRef<[u8]>> KeywordReader<R> {
             }
             _ => panic!("no mat or section!!"),
         }
-        // if &self.consume_prefix() == "MAT" || "SECTION" {}
     }
     // after located keyword, return position to be rewrite
     pub fn process_part(&mut self) -> (String, u64) {
         // below keyword, may have a comment line
         self.consume_comment_line();
-        let name = self.consume_prefix();
+        let name = self.read_line().trim().to_string();
         //TODO: write toml read info into model
         self.consume_comment_line();
         // now we at the beginning of line keycells
         dbg!(name, self.seek_head())
-    }
-}
-
-// e.g. the first cell of a keyword input is `id`
-pub struct KeyCell(SeekFrom, [u8; 10]);
-
-impl KeyCell {
-    pub fn write_to(self, f: &mut File) -> io::Result<()> {
-        f.seek(self.0)?;
-        f.write_all(&self.1)?;
-        Ok(())
     }
 }
 
@@ -135,7 +116,7 @@ impl DirInRepo {
             DirInRepo::Mats => "materials",
             DirInRepo::Models => "models",
         };
-        let mut buf = PathBuf::from("./");
+        let mut buf = PathBuf::from("./src/");
         buf.push(sfx);
         buf
     }
@@ -161,7 +142,7 @@ impl FromStr for Keyword {
     type Err = KwdErr;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match trim_newline(s).trim() {
+        match s.trim() {
             "PART" => Ok(Self::Part),
             "SECTION_SHELL" => Ok(Self::Shell),
             "SECTION_SOLID" => Ok(Self::Solid),
@@ -170,16 +151,6 @@ impl FromStr for Keyword {
             _ => Ok(Self::Undefined),
         }
     }
-}
-
-fn trim_newline(s: &str) -> &str {
-    let patrn = |c: char| c == '\r' || c == '\n';
-    s.trim_end_matches(patrn)
-}
-
-#[test]
-fn test_newline_trim() {
-    assert_eq!(trim_newline("!\r\n"), "!");
 }
 
 // one possible implementation of walking a directory only visiting files
