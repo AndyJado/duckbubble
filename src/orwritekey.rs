@@ -59,12 +59,11 @@ impl<R: AsRef<[u8]>> KeywordReader<R> {
     fn consume_comment_line(&mut self) {
         loop {
             let xr = self.read_char();
-            let bad = xr == b'*' || xr == b' ';
+            let bad = xr == b'$' || xr == b' ';
             if !bad {
                 //TODO: can use comment line to help locating and do hell more stuff
                 self.read_line();
             } else {
-                //FIXME: Not tested yet
                 self.seek_back(1);
                 break;
             }

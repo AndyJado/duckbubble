@@ -1,0 +1,19 @@
+[[parts]]
+name = "polo"
+mat = "steel"
+
+[[parts]]
+name = "car"
+mat = "steel"
+sec = "polo"
+
+[[node_sets]]
+name = "fixd"
+
+[[node_sets]]
+name = "speed"
+
+[[parts]]
+name = "soil"
+#default goes to part name, e.g. `mat = "soil"`
+
