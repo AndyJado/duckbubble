@@ -61,15 +61,6 @@ impl Part {
             None => self.first_name(),
         }
     }
-    pub fn path_to(&self, dir: DirInRepo) -> PathBuf {
-        let mut path = dir.path();
-        match dir {
-            DirInRepo::Secs => path.push(self.sec()),
-            DirInRepo::Mats => path.push(self.mat()),
-            _ => panic!("part_path to that not defined yet"),
-        }
-        path
-    }
     pub fn mid_allo(&mut self, lord: &mut KeyId) {
         if self.mid.is_none() {
             lord.next().unwrap();

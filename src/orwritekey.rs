@@ -82,7 +82,7 @@ impl<R: AsRef<[u8]>> KeywordReader<R> {
                 self.consume_comment_line();
                 self.seek_head()
             }
-            _ => panic!("no mat or section!!"),
+            _ => panic!("no mat or section in provided .key file!!"),
         }
     }
     // after located keyword, return position to be rewrite

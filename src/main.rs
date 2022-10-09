@@ -32,7 +32,7 @@ fn main() -> io::Result<()> {
         }
         par_map.insert(par.name(), par);
     }
-    //write to attri dirs
+    //write to attri dirs,(key, value)
     for (k, v) in mid_map.iter() {
         let mut path = DirInRepo::Mats.path();
         path.push(k);
