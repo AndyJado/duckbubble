@@ -1,10 +1,33 @@
-use std::io;
-
-use crate::parts::{DynaConfig, Part};
+use std::{
+    io,
+    path::{Path, PathBuf},
+};
 
 // Deal with arguments from command line
 pub struct ArgBoy {
     args: Vec<String>,
+}
+
+#[derive(Debug)]
+pub struct RepoBoy<'a> {
+    src: &'a str,
+    models: &'a str,
+    sections: &'a str,
+    materials: &'a str,
+}
+
+impl RepoBoy<'_> {
+    fn new() -> Self {
+        RepoBoy {
+            src: "./src/",
+            models: "./src/models/",
+            sections: "./src/sections/",
+            materials: "./src/materials/",
+        }
+    }
+    fn init(&self) -> io::Result<()> {
+        Ok(())
+    }
 }
 
 impl ArgBoy {
