@@ -9,13 +9,15 @@ use std::str::FromStr;
 
 pub struct KeywordReader<R: AsRef<[u8]>>(Cursor<R>);
 
+pub struct PartReader<R: AsRef<[u8]>>(pub KeywordReader<R>);
+
 // There is no boundary check!!
-impl<R: AsRef<[u8]>> Iterator for KeywordReader<R> {
+impl<R: AsRef<[u8]>> Iterator for PartReader<R> {
     type Item = Option<(String, u64)>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        match self.read_keyword_a() {
-            Keyword::Part => Some(Some(self.process_part())),
+        match self.0.read_keyword_a().1 {
+            Keyword::Part => Some(Some(self.0.process_part())),
             Keyword::End => None,
             _ => Some(None),
         }
@@ -50,11 +52,14 @@ impl<R: AsRef<[u8]>> KeywordReader<R> {
             continue;
         }
     }
-    pub fn read_keyword_a(&mut self) -> Keyword {
+    pub fn read_keyword_a(&mut self) -> (u64, Keyword) {
         self.find_keyword();
-        self.read_line()
-            .parse::<Keyword>()
-            .expect("parse readed keyword")
+        (
+            self.seek_head(),
+            self.read_line()
+                .parse::<Keyword>()
+                .expect("parse readed keyword"),
+        )
     }
     fn consume_comment_line(&mut self) {
         loop {
@@ -102,6 +107,7 @@ pub enum DirInRepo {
     Secs,
     Mats,
     Models,
+    Src,
 }
 
 impl DirInRepo {
@@ -112,6 +118,7 @@ impl DirInRepo {
             DirInRepo::Secs => "sections",
             DirInRepo::Mats => "materials",
             DirInRepo::Models => "models",
+            DirInRepo::Src => "",
         };
         let mut buf = PathBuf::from("./src/");
         buf.push(sfx);

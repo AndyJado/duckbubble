@@ -1,6 +1,6 @@
 use duckbubble::{
-    orwritekey::{DirInRepo, KeywordReader},
-    parts::{Config, KeyCell, KeyId, Part},
+    orwritekey::{DirInRepo, KeywordReader, PartReader},
+    parts::{DynaConfig, KeyCell, KeyId, Part},
 };
 use std::{
     collections::HashMap,
@@ -13,7 +13,7 @@ fn main() -> io::Result<()> {
     //read toml, where is the description of the calculation
     let args: Vec<String> = env::args().collect();
     let toml_path = &args[1];
-    let mut cfg = Config::read(toml_path);
+    let mut cfg = DynaConfig::read(toml_path);
     let mut id_gen = KeyId::new();
     let mut mid_map: HashMap<String, KeyCell> = HashMap::new();
     let mut sid_map: HashMap<String, KeyCell> = HashMap::new();
@@ -65,8 +65,9 @@ fn main() -> io::Result<()> {
             let stream = fs::read(&k_path)?;
             let mut file = File::options().write(true).open(k_path)?;
             let kdar = KeywordReader::new(stream);
+            let pdar = PartReader(kdar);
             // read the whole file, return where and who to write
-            let write_vec: Vec<_> = kdar.collect();
+            let write_vec: Vec<_> = pdar.collect();
             for order in write_vec {
                 if let Some((name, head)) = order {
                     // retrieve part from cache

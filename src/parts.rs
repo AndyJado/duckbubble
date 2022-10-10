@@ -1,12 +1,10 @@
 use serde_derive::Deserialize;
-use std::{fs, path::PathBuf, u8};
-
-use crate::orwritekey::DirInRepo;
+use std::{fs, u8};
 
 type Opvec<T> = Option<Vec<T>>;
 
 #[derive(Debug, Default, Deserialize)]
-pub struct Config {
+pub struct DynaConfig {
     pub parts: Vec<Part>,
     pub secs: Opvec<Section>,
     pub mats: Opvec<Material>,
@@ -19,7 +17,7 @@ pub enum ConfigErr {
     Undefine,
 }
 
-impl Config {
+impl DynaConfig {
     pub fn read(path: &str) -> Self {
         let ctn = fs::read_to_string(path).expect("!config read from toml file!");
         toml::from_str(&ctn).expect("!read toml file from current dir!")
