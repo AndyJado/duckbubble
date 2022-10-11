@@ -4,7 +4,6 @@ use std::io;
 use std::io::prelude::*;
 use std::io::Cursor;
 use std::path::Path;
-use std::path::PathBuf;
 use std::str::FromStr;
 
 pub struct KeywordReader<R: AsRef<[u8]>>(Cursor<R>);
@@ -99,30 +98,6 @@ impl<R: AsRef<[u8]>> KeywordReader<R> {
         self.consume_comment_line();
         // now we at the beginning of line keycells
         dbg!(name, self.seek_head())
-    }
-}
-
-// one calculation, one repo, dir structure should be conventional
-pub enum DirInRepo {
-    Secs,
-    Mats,
-    Models,
-    Src,
-}
-
-impl DirInRepo {
-    //FIXME: assume we are in repo, so start with ./
-    pub fn path(&self) -> PathBuf {
-        //suffix
-        let sfx = match self {
-            DirInRepo::Secs => "sections",
-            DirInRepo::Mats => "materials",
-            DirInRepo::Models => "models",
-            DirInRepo::Src => "",
-        };
-        let mut buf = PathBuf::from("./src/");
-        buf.push(sfx);
-        buf
     }
 }
 

@@ -1,47 +1,80 @@
-use std::{
-    io,
-    path::{Path, PathBuf},
-};
+use std::{env::Args, fs, io, path::PathBuf, str::FromStr};
 
-// Deal with arguments from command line
-pub struct ArgBoy {
-    args: Vec<String>,
+/// read argment return command
+pub enum Argommand {
+    Init,
+    Link,
 }
 
 #[derive(Debug)]
-pub struct RepoBoy<'a> {
-    src: &'a str,
-    models: &'a str,
-    sections: &'a str,
-    materials: &'a str,
+pub enum ArgoErr {
+    Duh,
 }
 
-impl RepoBoy<'_> {
-    fn new() -> Self {
-        RepoBoy {
-            src: "./src/",
-            models: "./src/models/",
-            sections: "./src/sections/",
-            materials: "./src/materials/",
+impl FromStr for Argommand {
+    type Err = ArgoErr;
+    // so je eventually need to `match a string` between env and a hand coded one
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if s == "init" {
+            Ok(Argommand::Init)
+        } else {
+            Err(ArgoErr::Duh)
         }
     }
-    fn init(&self) -> io::Result<()> {
-        Ok(())
-    }
 }
+
+/// Deal with arguments from command line
+pub struct ArgBoy(Args);
 
 impl ArgBoy {
     pub fn new() -> Self {
-        let args = std::env::args().collect();
-        ArgBoy { args }
+        let args = std::env::args();
+        ArgBoy(args)
     }
-    pub fn read_uh(&self) -> io::Result<()> {
-        let uh: &str = &self.args[1];
-        match uh {
-            "init" => todo!(),
-            "dry.toml" => todo!(),
-            _ => panic!("not yet this arg!"),
+    pub fn errand(&mut self) -> Argommand {
+        dbg!(self.0.next());
+        match self.0.next() {
+            Some(ref s) => s.parse().expect("now only has `init`"),
+            None => Argommand::Link,
         }
-        Ok(())
+    }
+}
+
+/// deal with files entries relate
+#[derive(Debug)]
+pub struct RepoBoy {
+    pub src: PathBuf,
+    pub models: PathBuf,
+    pub sections: PathBuf,
+    pub materials: PathBuf,
+}
+
+impl RepoBoy {
+    /// create RepoBoy in current entry, create dirs if not there
+    pub fn new() -> Self {
+        let paf = |s: &str| PathBuf::from(s);
+        let src = paf("src");
+        let models = paf("src/models");
+        let sections = paf("src/sections");
+        let materials = paf("src/materials");
+        RepoBoy {
+            src,
+            models,
+            sections,
+            materials,
+        }
+    }
+    pub fn init(self) -> io::Result<()> {
+        let cre = |paf: PathBuf| {
+            if !paf.exists() {
+                fs::create_dir(paf)
+            } else {
+                Ok(())
+            }
+        };
+        cre(self.src)?;
+        cre(self.models)?;
+        cre(self.materials)?;
+        cre(self.sections)
     }
 }

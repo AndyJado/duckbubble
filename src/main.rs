@@ -1,24 +1,23 @@
 use duckbubble::{
-    orwritekey::{DirInRepo, KeywordReader, PartReader},
+    boys::{ArgBoy, Argommand, RepoBoy},
+    orwritekey::{KeywordReader, PartReader},
     parts::{DynaConfig, KeyCell, KeyId, Part},
 };
 use std::{
     collections::HashMap,
-    env,
     fs::{self, File},
     io::{self, Seek, SeekFrom, Write},
 };
 
-fn main() -> io::Result<()> {
+fn link_dyna_repo(repo_boy: RepoBoy) -> io::Result<()> {
     //read toml, where is the description of the calculation
-    let args: Vec<String> = env::args().collect();
-    let toml_path = &args[1];
-    let mut cfg = DynaConfig::read(toml_path);
+    let mut cfg = DynaConfig::read("dry.toml");
+    //Now links in repo happens
     let mut id_gen = KeyId::new();
     let mut mid_map: HashMap<String, KeyCell> = HashMap::new();
     let mut sid_map: HashMap<String, KeyCell> = HashMap::new();
     let mut par_map: HashMap<String, &Part> = HashMap::new();
-    let part_dir = DirInRepo::Models.path();
+    let part_dir = repo_boy.models;
     // extract parts
     for par in &mut cfg.parts {
         //alloc material & section id
@@ -34,7 +33,7 @@ fn main() -> io::Result<()> {
     }
     //write to attri dirs,(key, value)
     for (k, v) in mid_map.iter() {
-        let mut path = DirInRepo::Mats.path();
+        let mut path = repo_boy.materials.clone();
         path.push(k);
         path.set_extension("k");
         dbg!(&path);
@@ -46,7 +45,7 @@ fn main() -> io::Result<()> {
         file.write_all(&v.0)?;
     }
     for (k, v) in sid_map.iter() {
-        let mut path = DirInRepo::Secs.path();
+        let mut path = repo_boy.sections.clone();
         path.push(k);
         path.set_extension("k");
         dbg!(&path);
@@ -89,6 +88,7 @@ fn main() -> io::Result<()> {
                         Some(ref sid) => sid,
                         None => sid_map.get(&par.sec()).expect("sec in book"),
                     };
+                    // move a cell forward
                     file.seek(SeekFrom::Start(head + 10))?;
                     file.write_all(&sec_cell.0)?;
                     file.write_all(&mat_cell.0)?;
@@ -97,4 +97,13 @@ fn main() -> io::Result<()> {
         }
     }
     Ok(())
+}
+
+fn main() -> io::Result<()> {
+    let mut argboy = ArgBoy::new();
+    let repoboy = RepoBoy::new();
+    match argboy.errand() {
+        Argommand::Init => repoboy.init(),
+        Argommand::Link => link_dyna_repo(repoboy),
+    }
 }
