@@ -27,16 +27,19 @@ impl<R: AsRef<[u8]>> KeywordReader<R> {
     pub fn new(stream: R) -> Self {
         KeywordReader(Cursor::new(stream))
     }
+    /// cursor move a char, return read char
     pub fn read_char(&mut self) -> u8 {
         let mut char_buf = [b' '; 1];
         self.0.read_exact(&mut char_buf).expect("!reading a char!");
         char_buf[0]
     }
+    /// cursor move after \n, return read string
     pub fn read_line(&mut self) -> String {
         let mut buf = String::new();
         self.0.read_line(&mut buf).expect("!reading a line!");
         buf
     }
+    /// seek head postion
     pub fn seek_head(&self) -> u64 {
         self.0.position()
     }
@@ -46,6 +49,7 @@ impl<R: AsRef<[u8]>> KeywordReader<R> {
     pub fn seek_back(&mut self, n: u64) {
         self.0.set_position(self.seek_head() - n)
     }
+    /// cursor after *
     fn find_keyword(&mut self) {
         while self.read_char() != b'*' {
             continue;
@@ -71,12 +75,14 @@ impl<R: AsRef<[u8]>> KeywordReader<R> {
             }
         }
     }
+    /// e.g. "MAT_ELASTIC" return "MAT"
     fn consume_prefix(&mut self) -> String {
         let ln = self.read_line();
         let v: Vec<&str> = ln.trim().split(|c| c == '-' || c == '_').collect();
         //FIXME: currently only the prefix of name is taken into consideration
         v.first().expect("keyword should has title").to_string()
     }
+    /// `MAT` & `SECTION` id cursor position in key file
     pub fn process_part_attri(&mut self) -> u64 {
         self.find_keyword();
         let pref = self.consume_prefix();
@@ -89,7 +95,7 @@ impl<R: AsRef<[u8]>> KeywordReader<R> {
             _ => panic!("no mat or section in provided .key file!!"),
         }
     }
-    // after located keyword, return position to be rewrite
+    /// after located keyword, return position to be rewrite
     pub fn process_part(&mut self) -> (String, u64) {
         // below keyword, may have a comment line
         self.consume_comment_line();
