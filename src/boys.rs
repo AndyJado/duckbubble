@@ -1,4 +1,12 @@
-use std::{env::Args, fs, io, path::PathBuf, str::FromStr};
+use std::{
+    env::Args,
+    fs::{self, File},
+    io::{self, Seek, SeekFrom},
+    path::{Path, PathBuf},
+    str::FromStr,
+};
+
+use crate::orwritekey::{self, KeywordReader};
 
 /// read argment return command
 pub enum Argommand {
@@ -77,4 +85,33 @@ impl RepoBoy {
         cre(self.materials)?;
         cre(self.sections)
     }
+    pub fn main_key_compo(&self) -> io::Result<()> {
+        let main_k_path = Path::new("main.k");
+        if !main_k_path.is_file() {
+            panic!("current repo no main.k")
+        };
+        let stream = fs::read(main_k_path).expect("read main.k");
+        let mut kdar = KeywordReader::new(stream);
+        let head = kdar.find_kwd_a(orwritekey::Keyword::End);
+        let mut main_k = File::options()
+            .write(true)
+            .open(main_k_path)
+            .expect("open main.k for write");
+        main_k
+            .seek(SeekFrom::Start(head))
+            .expect("seek *END in main.k");
+        Ok(())
+    }
+    fn walk_key(&self) {
+        // dir reader, didar, an iterator next() `DirEntry`
+        let didar = |p: &PathBuf| fs::read_dir(p).expect("dir exists").filter_map(|c| c.ok());
+        let m_d_dar = didar(&self.materials);
+        let f_paths = m_d_dar
+            .map(|c| c.path())
+            .filter(|p| p.extension().is_some())
+            .filter(|p| p.extension().unwrap() == "k")
+            .collect::<Vec<_>>();
+    }
 }
+
+trait DirWalk {}
