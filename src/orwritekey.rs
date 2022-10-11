@@ -55,15 +55,26 @@ impl<R: AsRef<[u8]>> KeywordReader<R> {
             continue;
         }
     }
+    /// cursor at '*'
     pub fn read_keyword_a(&mut self) -> (u64, Keyword) {
         self.find_keyword();
         (
-            self.seek_head(),
+            self.seek_head() - 1,
             self.read_line()
                 .parse::<Keyword>()
                 .expect("parse readed keyword"),
         )
     }
+    /// find the first desired keyword, set cursor at `*`
+    pub fn find_kwd_a(&mut self, kwd: Keyword) -> u64 {
+        let (head, k) = self.read_keyword_a();
+        if kwd as i32 == k as i32 {
+            head
+        } else {
+            self.find_kwd_a(kwd)
+        }
+    }
+    /// read until no '$' at line start
     fn consume_comment_line(&mut self) {
         loop {
             if self.read_char() == b'$' {
