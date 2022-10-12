@@ -1,5 +1,5 @@
 use duckbubble::{
-    boys::{ArgBoy, Argommand, RepoBoy},
+    boys::{ArgBoy, Argommand, DirWalker, RepoBoy},
     orwritekey::{KeywordReader, PartReader},
     parts::{DynaConfig, KeyCell, KeyId, Part},
 };
@@ -10,6 +10,8 @@ use std::{
 };
 
 fn link_dyna_repo(repo_boy: RepoBoy) -> io::Result<()> {
+    let dir_boy = DirWalker::new();
+    repo_boy.main_key_compo(&dir_boy)?;
     //read toml, where is the description of the calculation
     let mut cfg = DynaConfig::read("dry.toml");
     //Now links in repo happens
@@ -17,7 +19,6 @@ fn link_dyna_repo(repo_boy: RepoBoy) -> io::Result<()> {
     let mut mid_map: HashMap<String, KeyCell> = HashMap::new();
     let mut sid_map: HashMap<String, KeyCell> = HashMap::new();
     let mut par_map: HashMap<String, &Part> = HashMap::new();
-    let part_dir = repo_boy.models;
     // extract parts
     for par in &mut cfg.parts {
         //alloc material & section id
@@ -56,7 +57,7 @@ fn link_dyna_repo(repo_boy: RepoBoy) -> io::Result<()> {
         file.seek(SeekFrom::Start(seek_head))?;
         file.write_all(&v.0)?;
     }
-    for entry in fs::read_dir(part_dir)? {
+    for entry in fs::read_dir(&repo_boy.models)? {
         let entry = entry?;
         let k_path = entry.path();
         if k_path.extension().unwrap() == "k" {

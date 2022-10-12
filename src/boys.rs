@@ -1,7 +1,7 @@
 use std::{
     env::Args,
     fs::{self, File},
-    io::{self, Seek, SeekFrom},
+    io::{self, LineWriter, Seek, SeekFrom, Write},
     path::{Path, PathBuf},
     str::FromStr,
 };
@@ -80,38 +80,65 @@ impl RepoBoy {
                 Ok(())
             }
         };
+        cre(PathBuf::from("dry.toml"))?;
+        cre(PathBuf::from("main.k"))?;
         cre(self.src)?;
         cre(self.models)?;
         cre(self.materials)?;
         cre(self.sections)
     }
-    pub fn main_key_compo(&self) -> io::Result<()> {
+    /// link all cards in repo to main.k
+    pub fn main_key_compo(&self, ddar: &DirWalker) -> io::Result<()> {
+        // assume in `repo/`
         let main_k_path = Path::new("main.k");
         if !main_k_path.is_file() {
             panic!("current repo no main.k")
         };
-        let stream = fs::read(main_k_path).expect("read main.k");
+        // cursor main.k
+        let stream = fs::read(main_k_path).unwrap();
         let mut kdar = KeywordReader::new(stream);
         let head = kdar.find_kwd_a(orwritekey::Keyword::End);
-        let mut main_k = File::options()
+        let mut file = File::options()
             .write(true)
             .open(main_k_path)
             .expect("open main.k for write");
-        main_k
-            .seek(SeekFrom::Start(head))
-            .expect("seek *END in main.k");
+        file.seek(SeekFrom::Start(head))
+            .expect("should seek `*END` in main.k");
+        // write to main.k
+        let mut ln_wtr = LineWriter::new(file);
+        ln_wtr
+            .write_all(b"*INCLUDE_AUTO_OFFSET\n")
+            .expect("write *INCLUDE");
+        let mut mats_k_p = ddar.key_paf_vec(self.materials.clone());
+        let mut secs_k_p = ddar.key_paf_vec(self.sections.clone());
+        let mut modls_k_p = ddar.key_paf_vec(self.models.clone());
+        let itr_secs = secs_k_p.iter_mut().filter_map(|c| c.as_os_str().to_str());
+        let itr_mats = mats_k_p.iter_mut().filter_map(|c| c.as_os_str().to_str());
+        let itr_modls = modls_k_p.iter_mut().filter_map(|c| c.as_os_str().to_str());
+        let itr = itr_secs.chain(itr_mats).chain(itr_modls);
+        for i in itr {
+            ln_wtr.write_all(i.as_bytes()).expect("writing to main.k");
+            ln_wtr.write_all(b"\n").expect(r"writing `\n`");
+        }
+        ln_wtr.write_all(b"*END\n").expect("write *END");
         Ok(())
-    }
-    fn walk_key(&self) {
-        // dir reader, didar, an iterator next() `DirEntry`
-        let didar = |p: &PathBuf| fs::read_dir(p).expect("dir exists").filter_map(|c| c.ok());
-        let m_d_dar = didar(&self.materials);
-        let f_paths = m_d_dar
-            .map(|c| c.path())
-            .filter(|p| p.extension().is_some())
-            .filter(|p| p.extension().unwrap() == "k")
-            .collect::<Vec<_>>();
     }
 }
 
-trait DirWalk {}
+type WalkDir = Box<dyn Fn(PathBuf) -> std::fs::ReadDir>;
+
+pub struct DirWalker {
+    iter: WalkDir,
+}
+
+impl DirWalker {
+    pub fn new() -> Self {
+        let iter = Box::new(|p| fs::read_dir(p).expect("dir should exists"));
+        DirWalker { iter }
+    }
+    pub fn key_paf_vec(&self, p: PathBuf) -> Vec<PathBuf> {
+        let a = &self.iter;
+        let b = a(p);
+        b.filter_map(|c| c.ok()).map(|e| e.path()).collect()
+    }
+}
