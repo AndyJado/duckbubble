@@ -1,5 +1,5 @@
 use duckbubble::{
-    boys::{ArgBoy, Argommand, DirWalker, RepoBoy},
+    boys::{ArgBoy, Argommand, DirWalker, KeyPath, RepoBoy},
     orwritekey::{KeywordReader, PartReader},
     parts::{DynaConfig, KeyCell, KeyId, Part},
 };
@@ -60,7 +60,7 @@ fn link_dyna_repo(repo_boy: RepoBoy) -> io::Result<()> {
     for entry in fs::read_dir(&repo_boy.models)? {
         let entry = entry?;
         let k_path = entry.path();
-        if k_path.extension().unwrap() == "k" {
+        if KeyPath(&k_path).is_k() {
             // file read & write
             let stream = fs::read(&k_path)?;
             let mut file = File::options().write(true).open(k_path)?;
