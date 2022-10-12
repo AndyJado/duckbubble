@@ -105,7 +105,7 @@ impl RepoBoy {
             .expect("open main.k for write");
         file.seek(SeekFrom::Start(head))
             .expect("should seek `*END` in main.k");
-        // *INCLUDE
+        // *INCLUDE, the order is important!
         let mut ln_wtr = LineWriter::new(file);
         ln_wtr.write_all(b"*INCLUDE\n").expect("write *INCLUDE");
         // read file names from `secs` `mats` and write to main
@@ -114,7 +114,10 @@ impl RepoBoy {
         let itr_secs = secs_k_p.iter_mut().filter_map(|c| c.as_os_str().to_str());
         let itr_mats = mats_k_p.iter_mut().filter_map(|c| c.as_os_str().to_str());
         let itr = itr_secs.chain(itr_mats);
-        for i in itr {
+        'k: for i in itr {
+            if !KeyPath(i).is_k() {
+                continue 'k;
+            };
             ln_wtr.write_all(i.as_bytes()).expect("writing to main.k");
             ln_wtr.write_all(b"\n").expect(r"writing `\n`");
         }
@@ -125,7 +128,10 @@ impl RepoBoy {
         // read models and write to main
         let mut modls_k_p = ddar.key_paf_vec(self.models.clone());
         let itr_modls = modls_k_p.iter_mut().filter_map(|c| c.as_os_str().to_str());
-        for i in itr_modls {
+        'k: for i in itr_modls {
+            if !KeyPath(i).is_k() {
+                continue 'k;
+            };
             ln_wtr.write_all(i.as_bytes()).expect("writing to main.k");
             ln_wtr.write_all(b"\n").expect(r"writing `\n`");
         }
@@ -138,7 +144,6 @@ impl RepoBoy {
 pub struct KeyPath<T: AsRef<Path>>(pub T);
 
 impl<T: AsRef<Path>> KeyPath<T> {
-    //FIXME: this is so ugly, sosososososo ugly
     pub fn is_k(&self) -> bool {
         let sufx = self.0.as_ref().extension();
         match sufx {
