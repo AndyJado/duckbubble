@@ -80,8 +80,9 @@ impl RepoBoy {
                 Ok(())
             }
         };
-        cre(PathBuf::from("dry.toml"))?;
-        cre(PathBuf::from("main.k"))?;
+        File::create("dry.toml")?;
+        let mut f = File::create("main.key")?;
+        f.write_all(b"*END")?;
         cre(self.src)?;
         cre(self.models)?;
         cre(self.materials)?;
