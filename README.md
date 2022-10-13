@@ -1,16 +1,24 @@
 ## 声明式的有限元预处理
 
-做有限元的时候, 你觉得是像`系纽扣`呢, 还是像`拉拉链`?
+做有限元的时候, 你觉得是像`系纽扣`呢, 还是像`拉拉链`呢?
 
-拉链拉到后面, 前面开了, 怎么办呢?
+拉链拉到后面, 前面开了, 怎么办?
+
+## 我用得上吗?
+
+如果你使用LS-DYNA, 那么你就用得上, 据我所知, 还没有别的软件做这个事情.
+
+[walk through_`2min video`](https://www.bilibili.com/video/BV1QR4y1R76t/)
 
 ## 不用🥺
 
 软件目前仅支持LS-DYNA
 
-windows下我只会用WSL(linux子系统)
+仅测试了windows下配合WSL(LINUX子系统)使用
 
-需要Rust工具链
+安装需要Rust工具链
+
+还没写文档
 
 ## 要用🙇
 
@@ -21,8 +29,6 @@ git clone https://github.com/AndyJado/duckbubble
 cd duckbubble
 cargo install --path duckbubble
 ```
-
-[一个不太友好的视频介绍](https://www.bilibili.com/video/BV1QR4y1R76t/)
 
 ---
 
@@ -35,6 +41,8 @@ cargo install --path duckbubble
 - 支持主流商业软件
 
 - 人的意图与商业软件之间的一位门童
+
+- 开箱即用
 
 #### NonGoals:
 
