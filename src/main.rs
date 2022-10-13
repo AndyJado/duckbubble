@@ -11,7 +11,6 @@ use std::{
 
 fn link_dyna_repo(repo_boy: RepoBoy) -> io::Result<()> {
     let dir_boy = DirWalker::new();
-    repo_boy.main_key_compo(&dir_boy)?;
     //read toml, where is the description of the calculation
     let mut cfg = DynaConfig::read("dry.toml");
     //Now links in repo happens
@@ -97,6 +96,7 @@ fn link_dyna_repo(repo_boy: RepoBoy) -> io::Result<()> {
             }
         }
     }
+    repo_boy.main_key_compo(&dir_boy)?;
     Ok(())
 }
 

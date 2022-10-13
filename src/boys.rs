@@ -81,7 +81,7 @@ impl RepoBoy {
             }
         };
         File::create("dry.toml")?;
-        let mut f = File::create("main.key")?;
+        let mut f = File::create("main.k")?;
         f.write_all(b"*END")?;
         cre(self.src)?;
         cre(self.models)?;
