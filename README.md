@@ -24,10 +24,16 @@
 
 [配置环境](https://github.com/AndyJado/chitto/blob/d73ffdf4cd03fbbbcca38c32b4784939c41a4d32/terminal-stf/src/oh-WSL.md)
 
+配置好之后
+
+回到终端
+
+国内的话
+
 ```sh
-git clone https://github.com/AndyJado/duckbubble
+git clone https://gitee.com/AndyJado/duckbubble.git
 cd duckbubble
-cargo install --path duckbubble
+cargo install --path=.
 ```
 
 ---
