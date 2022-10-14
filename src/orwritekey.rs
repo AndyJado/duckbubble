@@ -49,7 +49,7 @@ impl<R: AsRef<[u8]>> KeywordReader<R> {
     pub fn seek_back(&mut self, n: u64) {
         self.0.set_position(self.seek_head() - n)
     }
-    /// cursor after *
+    /// read till next *
     fn find_keyword(&mut self) {
         while self.read_char() != b'*' {
             continue;
@@ -94,6 +94,7 @@ impl<R: AsRef<[u8]>> KeywordReader<R> {
         v.first().expect("keyword should has title").to_string()
     }
     /// `MAT` & `SECTION` id cursor position in key file
+    /// tail recursively
     pub fn process_part_attri(&mut self) -> u64 {
         self.find_keyword();
         let pref = self.consume_prefix();
@@ -103,7 +104,7 @@ impl<R: AsRef<[u8]>> KeywordReader<R> {
                 self.consume_comment_line();
                 self.seek_head()
             }
-            _ => panic!("no mat or section in provided .k file!!"),
+            _ => self.process_part_attri(),
         }
     }
     /// after located keyword, return position to be rewrite
