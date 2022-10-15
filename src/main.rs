@@ -37,7 +37,7 @@ fn link_dyna_repo(repo_boy: RepoBoy) -> io::Result<()> {
         path.push(k);
         path.set_extension("k");
         dbg!(&path);
-        let stream = fs::read(&path)?;
+        let stream = fs::read(&path).expect("material file name should match description in `dry.toml`");
         let mut kdar = KeywordReader::new(stream);
         let seek_head = kdar.process_part_attri();
         let mut file = File::options().write(true).open(path)?;
@@ -49,7 +49,7 @@ fn link_dyna_repo(repo_boy: RepoBoy) -> io::Result<()> {
         path.push(k);
         path.set_extension("k");
         dbg!(&path);
-        let stream = fs::read(&path)?;
+        let stream = fs::read(&path).expect("section file name should match description in `dry.toml`");
         let mut kdar = KeywordReader::new(stream);
         let seek_head = kdar.process_part_attri();
         let mut file = File::options().write(true).open(path)?;
