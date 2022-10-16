@@ -18,15 +18,14 @@
 
 安装需要Rust工具链
 
-还没写文档
-
 ## 要用🙇
 
+WSL及RUST工具链安装：
 [配置环境](https://github.com/AndyJado/chitto/blob/d73ffdf4cd03fbbbcca38c32b4784939c41a4d32/terminal-stf/src/oh-WSL.md)
 
 配置好之后
 
-回到终端
+回到终端(Linux终端)
 
 国内的话
 
