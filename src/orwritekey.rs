@@ -119,7 +119,7 @@ impl<R: AsRef<[u8]>> KeywordReader<R> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum Keyword {
     // *,&,name,$,cells
     Part,

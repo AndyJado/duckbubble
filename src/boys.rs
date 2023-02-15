@@ -81,8 +81,6 @@ impl RepoBoy {
             }
         };
         File::create("dry.toml")?;
-        let mut f = File::create("main.k")?;
-        f.write_all(b"*END")?;
         cre(self.src)?;
         cre(self.models)?;
         cre(self.materials)?;
@@ -90,21 +88,7 @@ impl RepoBoy {
     }
     /// link all cards in repo to main.k
     pub fn main_key_compo(&self, ddar: &DirWalker) -> io::Result<()> {
-        // assume in `repo/`
-        let main_k_path = Path::new("main.k");
-        if !main_k_path.is_file() {
-            panic!("current repo no main.k")
-        };
-        // cursor main.k
-        let stream = fs::read(main_k_path).unwrap();
-        let mut kdar = KeywordReader::new(stream);
-        let head = kdar.find_kwd_a(orwritekey::Keyword::End);
-        let mut file = File::options()
-            .write(true)
-            .open(main_k_path)
-            .expect("open main.k for write");
-        file.seek(SeekFrom::Start(head))
-            .expect("should seek `*END` in main.k");
+        let file = File::create("main.k")?;
         // *INCLUDE, the order is important!
         let mut ln_wtr = LineWriter::new(file);
         ln_wtr.write_all(b"*INCLUDE\n").expect("write *INCLUDE");
