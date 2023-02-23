@@ -38,6 +38,26 @@ pub struct Part {
 #[derive(Debug, Default, Deserialize, Clone, Copy)]
 pub struct KeyCell(pub [u8; 10]);
 
+impl From<u64> for KeyCell {
+    fn from(value: u64) -> Self {
+        let mut cell_buf = [b' '; 10];
+        let val = value.to_string();
+        let val_str = val.as_str().as_bytes().iter().take(9);
+        for (i, xr) in val_str.enumerate() {
+            cell_buf[i] = *xr;
+        }
+        KeyCell(cell_buf)
+    }
+}
+
+impl KeyCell {
+    // parse cell to u64
+    pub fn to_num(&mut self) -> u64 {
+        let zro_str = String::from_utf8_lossy(&self.0);
+        zro_str.parse().expect("a cell should parse to u64")
+    }
+}
+
 impl Part {
     pub fn name(&self) -> String {
         self.name.to_owned()
@@ -78,7 +98,7 @@ pub struct KeyId(KeyCell);
 impl KeyId {
     pub fn new() -> Self {
         let mut kcell = [b'9'; 10];
-        kcell[0] = b'1';
+        kcell[0] = b' ';
         KeyId(KeyCell(kcell))
     }
 }
@@ -90,16 +110,11 @@ impl Iterator for KeyId {
     fn next(&mut self) -> Option<Self::Item> {
         // parse cell to u64
         let zro_str = String::from_utf8_lossy(&self.0 .0);
-        let zro: u64 = zro_str.parse().expect("KeyId parse to u64");
+        let zro: u64 = zro_str.trim().parse().expect("KeyId parse to u64");
         // do calculation
         let next = zro - 1;
         // convert back to string
-        let next_str = next.to_string();
-        // turn str into u8 iter
-        let mut iter = next_str.bytes();
-        for i in 0..10 {
-            self.0 .0[i] = iter.next().unwrap();
-        }
+        self.0 = KeyCell::from(next);
         Some(next)
     }
 }
