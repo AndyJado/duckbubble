@@ -1,12 +1,10 @@
 use std::{
     env::Args,
     fs::{self, File},
-    io::{self, LineWriter, Seek, SeekFrom, Write},
+    io::{self, LineWriter, Write},
     path::{Path, PathBuf},
     str::FromStr,
 };
-
-use crate::orwritekey::{self, KeywordReader};
 
 /// read argment return command
 pub enum Argommand {

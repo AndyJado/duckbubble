@@ -29,7 +29,7 @@ fn run_para() -> io::Result<()> {
 fn link_dyna_repo(repo_boy: RepoBoy) -> io::Result<()> {
     let dir_boy = DirWalker::new();
     //read toml, where is the description of the calculation
-    let mut cfg = DynaConfig::read("dry.toml");
+    let cfg = DynaConfig::read("dry.toml");
     //Now links in repo happens
     let mut id_gen = KeyId::new();
     let mut mid_map: HashMap<String, KeyCell> = HashMap::new();
