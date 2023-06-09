@@ -86,7 +86,7 @@ impl KeyCell {
     // parse cell to u64
     pub fn to_num(&mut self) -> u64 {
         let zro_str = String::from_utf8_lossy(&self.0);
-        zro_str.parse().expect("a cell should parse to u64")
+        zro_str.trim().parse().expect("a cell should parse to u64")
     }
     // to f64
     pub fn to_float(&self) -> f64 {
