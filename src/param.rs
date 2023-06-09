@@ -21,6 +21,7 @@ pub fn ls_run(cfg: LsCfg, para: ParamCfg) {
     let mut file = File::options().write(true).open(job_path.clone()).unwrap();
     let mut para_read = KeywordReader::new(stream);
     work.pop();
+    let output = |dir| run_job(dir, &job_path, &env_path, &bin_path);
     let mut left = work.clone();
     left.push("left\\");
     fs::DirBuilder::new().recursive(true).create(&left).unwrap();
@@ -31,30 +32,6 @@ pub fn ls_run(cfg: LsCfg, para: ParamCfg) {
         .create(&right)
         .unwrap();
     dbg!(&left);
-    // work.push()
-    let output = |dir| {
-        Command::new("cmd")
-            .args(["/C", "pushd"])
-            .arg(&dir)
-            .args([
-                "&&",
-                "call",
-                &env_path,
-                "&&",
-                "mpiexec",
-                "-c",
-                "10",
-                "-aa",
-                &bin_path,
-                "i=",
-                &job_path,
-                "memory=44m",
-            ])
-            .output()
-            .unwrap();
-    };
-    // output(&work);
-    //TODO: modify file content
     loop {
         para_read.find_kwd_a(crate::orwritekey::Keyword::Parameter);
         para_read.consume_comment_line();
@@ -72,4 +49,26 @@ pub fn ls_run(cfg: LsCfg, para: ParamCfg) {
     output(&left);
     //TODO: modify file content
     output(&right);
+}
+
+fn run_job(dir: &PathBuf, job: &str, env: &str, bin: &str) {
+    Command::new("cmd")
+        .args(["/C", "pushd"])
+        .arg(&dir)
+        .args([
+            "&&",
+            "call",
+            &env,
+            "&&",
+            "mpiexec",
+            "-c",
+            "10",
+            "-aa",
+            &bin,
+            "i=",
+            &job,
+            "memory=44m",
+        ])
+        .output()
+        .unwrap();
 }
