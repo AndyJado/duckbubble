@@ -6,6 +6,8 @@ use std::io::Cursor;
 use std::path::Path;
 use std::str::FromStr;
 
+use crate::parts::KeyCell;
+
 pub struct KeywordReader<R: AsRef<[u8]>>(Cursor<R>);
 
 pub struct PartReader<R: AsRef<[u8]>>(pub KeywordReader<R>);
@@ -32,6 +34,12 @@ impl<R: AsRef<[u8]>> KeywordReader<R> {
         let mut char_buf = [b' '; 1];
         self.0.read_exact(&mut char_buf).expect("!reading a char!");
         char_buf[0]
+    }
+    /// 10 byte
+    pub fn read_keycell_a(&mut self) -> KeyCell {
+        let mut cell = [b' '; 10];
+        self.0.read_exact(&mut cell).expect("!reading a keycell!");
+        KeyCell(cell)
     }
     /// cursor move after \n, return read string
     pub fn read_line(&mut self) -> String {
@@ -75,7 +83,7 @@ impl<R: AsRef<[u8]>> KeywordReader<R> {
         }
     }
     /// read until no '$' at line start
-    fn consume_comment_line(&mut self) {
+    pub fn consume_comment_line(&mut self) {
         loop {
             if self.read_char() == b'$' {
                 //TODO: can use comment line to help locating and do hell more stuff
@@ -122,6 +130,7 @@ impl<R: AsRef<[u8]>> KeywordReader<R> {
 #[derive(Debug, Clone, Copy)]
 pub enum Keyword {
     // *,&,name,$,cells
+    Parameter,
     Part,
     Shell,
     Solid,
@@ -141,6 +150,7 @@ impl FromStr for Keyword {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.trim() {
             "PART" => Ok(Self::Part),
+            "PARAMETER" => Ok(Self::Parameter),
             "SECTION_SHELL" => Ok(Self::Shell),
             "SECTION_SOLID" => Ok(Self::Solid),
             "SET_NODE_LIST" => Ok(Self::SetNode),

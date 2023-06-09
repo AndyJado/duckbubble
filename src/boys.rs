@@ -12,6 +12,7 @@ use crate::orwritekey::{self, KeywordReader};
 pub enum Argommand {
     Init,
     Link,
+    Para,
 }
 
 #[derive(Debug)]
@@ -23,11 +24,13 @@ impl FromStr for Argommand {
     type Err = ArgoErr;
     // so je eventually need to `match a string` between env and a hand coded one
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        if s == "init" {
-            Ok(Argommand::Init)
-        } else {
-            Err(ArgoErr::Duh)
-        }
+        let res = match s {
+            "init" => Argommand::Init,
+            "link" => Argommand::Link,
+            "para" => Argommand::Para,
+            _ => unimplemented!("can't understand this arg"),
+        };
+        Ok(res)
     }
 }
 
@@ -42,8 +45,8 @@ impl ArgBoy {
     pub fn errand(&mut self) -> Argommand {
         dbg!(self.0.next());
         match self.0.next() {
-            Some(ref s) => s.parse().expect("now only has `init`"),
-            None => Argommand::Link,
+            Some(ref s) => s.parse().expect("should parse arg"),
+            None => Argommand::Para,
         }
     }
 }

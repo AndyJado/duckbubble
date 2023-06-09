@@ -1,6 +1,7 @@
 use duckbubble::{
     boys::{ArgBoy, Argommand, DirWalker, KeyPath, RepoBoy},
     orwritekey::{KeywordReader, PartReader},
+    param::ls_run,
     parts::{DynaConfig, KeyCell, KeyId, Part},
 };
 use std::{
@@ -8,6 +9,22 @@ use std::{
     fs::{self, File},
     io::{self, Seek, SeekFrom, Write},
 };
+
+fn main() -> io::Result<()> {
+    let mut argboy = ArgBoy::new();
+    let repoboy = RepoBoy::new();
+    match argboy.errand() {
+        Argommand::Init => repoboy.init(),
+        Argommand::Link => link_dyna_repo(repoboy),
+        Argommand::Para => run_para(),
+    }
+}
+
+fn run_para() -> io::Result<()> {
+    let DynaConfig { lsrun, param, .. } = DynaConfig::read("dry.toml");
+    ls_run(lsrun, param);
+    Ok(())
+}
 
 fn link_dyna_repo(repo_boy: RepoBoy) -> io::Result<()> {
     let dir_boy = DirWalker::new();
@@ -19,7 +36,8 @@ fn link_dyna_repo(repo_boy: RepoBoy) -> io::Result<()> {
     let mut sid_map: HashMap<String, KeyCell> = HashMap::new();
     let mut par_map: HashMap<String, &Part> = HashMap::new();
     // extract parts
-    for par in &mut cfg.parts {
+    let mut parts = cfg.parts.unwrap();
+    for par in &mut parts {
         //alloc material & section id
         if !mid_map.contains_key(&par.mat()) {
             par.mid_allo(&mut id_gen);
@@ -37,7 +55,8 @@ fn link_dyna_repo(repo_boy: RepoBoy) -> io::Result<()> {
         path.push(k);
         path.set_extension("k");
         dbg!(&path);
-        let stream = fs::read(&path).expect("material file name should match description in `dry.toml`");
+        let stream =
+            fs::read(&path).expect("material file name should match description in `dry.toml`");
         let mut kdar = KeywordReader::new(stream);
         let seek_head = kdar.process_part_attri();
         let mut file = File::options().write(true).open(path)?;
@@ -49,7 +68,8 @@ fn link_dyna_repo(repo_boy: RepoBoy) -> io::Result<()> {
         path.push(k);
         path.set_extension("k");
         dbg!(&path);
-        let stream = fs::read(&path).expect("section file name should match description in `dry.toml`");
+        let stream =
+            fs::read(&path).expect("section file name should match description in `dry.toml`");
         let mut kdar = KeywordReader::new(stream);
         let seek_head = kdar.process_part_attri();
         let mut file = File::options().write(true).open(path)?;
@@ -98,13 +118,4 @@ fn link_dyna_repo(repo_boy: RepoBoy) -> io::Result<()> {
     }
     repo_boy.main_key_compo(&dir_boy)?;
     Ok(())
-}
-
-fn main() -> io::Result<()> {
-    let mut argboy = ArgBoy::new();
-    let repoboy = RepoBoy::new();
-    match argboy.errand() {
-        Argommand::Init => repoboy.init(),
-        Argommand::Link => link_dyna_repo(repoboy),
-    }
 }

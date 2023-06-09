@@ -1,11 +1,31 @@
 use serde_derive::Deserialize;
-use std::{fs, u8};
+use std::{
+    fs::{self, File},
+    io::{Seek, Write},
+    u8,
+};
 
 type Opvec<T> = Option<Vec<T>>;
 
 #[derive(Debug, Default, Deserialize)]
+pub struct LsCfg {
+    pub env_path: String,
+    pub bin_path: String,
+    pub job_path: String,
+}
+
+#[derive(Debug, Default, Deserialize)]
+pub struct ParamCfg {
+    pub name: String,
+    pub left: f64,
+    pub right: f64,
+}
+
+#[derive(Debug, Default, Deserialize)]
 pub struct DynaConfig {
-    pub parts: Vec<Part>,
+    pub lsrun: LsCfg,
+    pub param: ParamCfg,
+    pub parts: Opvec<Part>,
     pub secs: Opvec<Section>,
     pub mats: Opvec<Material>,
     pub node_sets: Opvec<NodeSet>,
@@ -50,11 +70,40 @@ impl From<u64> for KeyCell {
     }
 }
 
+impl From<f64> for KeyCell {
+    fn from(value: f64) -> Self {
+        let mut cell_buf = [b' '; 10];
+        let val = value.to_string();
+        let val_str = val.as_str().as_bytes().iter().take(9);
+        for (i, xr) in val_str.enumerate() {
+            cell_buf[i] = *xr;
+        }
+        KeyCell(cell_buf)
+    }
+}
+
 impl KeyCell {
     // parse cell to u64
     pub fn to_num(&mut self) -> u64 {
         let zro_str = String::from_utf8_lossy(&self.0);
         zro_str.parse().expect("a cell should parse to u64")
+    }
+    // to f64
+    pub fn to_float(&self) -> f64 {
+        let zro_str = String::from_utf8_lossy(&self.0);
+        dbg!(&zro_str);
+        zro_str.trim().parse().expect("a cell should parse to f64")
+    }
+    pub fn parse_para(&mut self) -> (char, String) {
+        let cell = self.0;
+        let ty = cell[0] as char;
+        let name = String::from_utf8(cell[1..].to_vec()).unwrap();
+        (ty, name.trim().to_owned())
+    }
+    /// replace a cell after reading it
+    pub fn replace(&self, cursor: u64, file: &mut File) {
+        file.seek(std::io::SeekFrom::Start(cursor - 10)).unwrap();
+        file.write_all(&self.0).unwrap();
     }
 }
 
