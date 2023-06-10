@@ -7,8 +7,8 @@ job_path = "E:\\Users\\ADMIN\\Desktop\\6.1\\astm-3039\\2mms\\DFAILC\\run.key"
 # now we use real number
 name = "dfailc"
 # initial value is the one written in key file, however you need to define 2 boundary here
-left = 0.0
-right = 1.0
+left = -1.0
+right = 0.0
 
 [[parts]]
 name = "polo"
