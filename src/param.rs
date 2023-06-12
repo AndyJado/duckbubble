@@ -2,14 +2,17 @@ pub(crate) use std::fs::{self, File};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::sync::mpsc::channel;
 use std::thread;
 
 use crate::orwritekey::KeywordReader;
 use crate::parts::{KeyCell, LsCfg, ParamCfg};
 
+pub fn ls_run(cfg: LsCfg, paras: ParamCfg) {
     if !cfg!(target_os = "windows") {
         panic!("run dyna only works on windows pc now")
     }
+    let (tx, rx) = channel();
     let LsCfg {
         env_path,
         bin_path,
@@ -21,6 +24,23 @@ use crate::parts::{KeyCell, LsCfg, ParamCfg};
     let stream = fs::read(&work).expect("job path is wrong, check dry.toml");
     work.pop();
     // modify file content
+    for para in paras.paras {
+        let mut ws = work.clone(); // workspace
+        let tx = tx.clone();
+        let new_dir = format!("{para}\\");
+        ws.push(new_dir);
+        fs::remove_dir_all(&ws).ok();
+        fs::DirBuilder::new().recursive(true).create(&ws).unwrap();
+        let job = para_change(paras.name.clone(), para, &ws, &stream);
+        let run_cfg = RunCfg {
+            dir: ws,
+            job: job.to_string_lossy().to_string(),
+            env: env_path.to_string(),
+            bin: bin_path.to_string(),
+        };
+        tx.send(thread::spawn(|| run_job(run_cfg))).unwrap();
+    }
+    rx.recv().unwrap().join().unwrap();
 }
 
 // return job name

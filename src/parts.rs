@@ -17,6 +17,7 @@ pub struct LsCfg {
 #[derive(Debug, Default, Deserialize)]
 pub struct ParamCfg {
     pub name: String,
+    pub paras: Vec<f64>,
 }
 
 #[derive(Debug, Default, Deserialize)]
