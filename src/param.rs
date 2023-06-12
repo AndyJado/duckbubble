@@ -20,7 +20,7 @@ pub fn ls_run(cfg: LsCfg, paras: ParamCfg) {
     } = cfg;
     // canonicalize is not working properly for this job, cmd call pushd related
     let mut work = Path::new(&job_path).to_path_buf();
-    eprintln!("submitting job path is {work:#?}");
+    eprintln!("origin key file path: {work:#?}, reading");
     let stream = fs::read(&work).expect("job path is wrong, check dry.toml");
     work.pop();
     // modify file content
@@ -40,6 +40,7 @@ pub fn ls_run(cfg: LsCfg, paras: ParamCfg) {
         };
         tx.send(thread::spawn(|| run_job(run_cfg))).unwrap();
     }
+    eprintln!("`now you should see CPU running like a charm, just leave me alone, I won't run, or technically, I am..");
     rx.recv().unwrap().join().unwrap();
 }
 
@@ -48,16 +49,15 @@ fn para_change(para_name: String, para_val: f64, dir: &PathBuf, stream: &Vec<u8>
     let mut para_read = KeywordReader::new(stream);
     let mut new_k = dir.clone();
     new_k.push("run.key");
+    eprintln!("creating new job file named `run.key`");
     let mut file = File::create(&new_k).unwrap();
-    eprintln!("creating new job file for each para");
     file.write_all(&stream).unwrap();
     loop {
         para_read.find_kwd_a(crate::orwritekey::Keyword::Parameter);
         para_read.consume_comment_line();
         if ('R', para_name.clone()) == para_read.read_keycell_a().parse_para() {
-            let para_cell = para_read.read_keycell_a();
-            let old_val = para_cell.to_float();
-            eprintln!("the old val of specified para is {old_val}");
+            // though I don't use this var, yet there side effect on the otherside, can R-A capture such?
+            let _para_cell = para_read.read_keycell_a();
             let cursor = para_read.seek_head();
             let new_val = para_val;
             let new_cell = KeyCell::from(new_val);
