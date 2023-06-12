@@ -91,7 +91,7 @@ impl KeyCell {
     // to f64
     pub fn to_float(&self) -> f64 {
         let zro_str = String::from_utf8_lossy(&self.0);
-        dbg!(&zro_str);
+        eprintln!("parsing Keycell float number {zro_str}");
         zro_str.trim().parse().expect("a cell should parse to f64")
     }
     pub fn parse_para(&mut self) -> (char, String) {

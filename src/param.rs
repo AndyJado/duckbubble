@@ -18,9 +18,9 @@ pub fn ls_run(cfg: LsCfg, para: ParamCfg) {
     } = cfg;
     // canonicalize is not working properly for this job, cmd call pushd related
     let mut work = Path::new(&job_path).to_path_buf();
-    let stream = fs::read(&work).unwrap();
+    eprintln!("submitting job path is {work:#?}");
+    let stream = fs::read(&work).expect("job path is wrong, check dry.toml");
     work.pop();
-    dbg!(&work);
     let run_cfg = RunCfg {
         dir: work.clone(),
         job: job_path.to_string(),
@@ -65,6 +65,7 @@ fn para_change(para_name: String, para_val: f64, dir: &PathBuf, stream: &Vec<u8>
     let mut new_k = dir.clone();
     new_k.push("run.key");
     let mut file = File::create(&new_k).unwrap();
+    eprintln!("creating new job file for each para");
     file.write_all(&stream).unwrap();
     loop {
         para_read.find_kwd_a(crate::orwritekey::Keyword::Parameter);
@@ -72,11 +73,11 @@ fn para_change(para_name: String, para_val: f64, dir: &PathBuf, stream: &Vec<u8>
         if ('R', para_name.clone()) == para_read.read_keycell_a().parse_para() {
             let para_cell = para_read.read_keycell_a();
             let old_val = para_cell.to_float();
+            eprintln!("the old val of specified para is {old_val}");
             let cursor = para_read.seek_head();
             let new_val = para_val;
             let new_cell = KeyCell::from(new_val);
             new_cell.replace(cursor, &mut file);
-            dbg!(old_val);
             return new_k;
         };
     }

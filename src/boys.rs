@@ -41,7 +41,7 @@ impl ArgBoy {
         ArgBoy(args)
     }
     pub fn errand(&mut self) -> Argommand {
-        dbg!(self.0.next());
+        self.0.next();
         match self.0.next() {
             Some(ref s) => s.parse().expect("should parse arg"),
             None => Argommand::Para,
