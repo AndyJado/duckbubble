@@ -7,7 +7,6 @@ use std::thread;
 use crate::orwritekey::KeywordReader;
 use crate::parts::{KeyCell, LsCfg, ParamCfg};
 
-pub fn ls_run(cfg: LsCfg, para: ParamCfg) {
     if !cfg!(target_os = "windows") {
         panic!("run dyna only works on windows pc now")
     }
@@ -21,44 +20,7 @@ pub fn ls_run(cfg: LsCfg, para: ParamCfg) {
     eprintln!("submitting job path is {work:#?}");
     let stream = fs::read(&work).expect("job path is wrong, check dry.toml");
     work.pop();
-    let run_cfg = RunCfg {
-        dir: work.clone(),
-        job: job_path.to_string(),
-        env: env_path.to_string(),
-        bin: bin_path.to_string(),
-    };
-    let t1 = thread::spawn(|| run_job(run_cfg));
     // modify file content
-    let mut left = work.clone();
-    left.push("left\\");
-    fs::remove_dir_all(&left).unwrap();
-    fs::DirBuilder::new().recursive(true).create(&left).unwrap();
-    let job = para_change(para.name.clone(), para.left, &left, &stream);
-    let run_cfg = RunCfg {
-        dir: left,
-        job: job.to_string_lossy().to_string(),
-        env: env_path.to_string(),
-        bin: bin_path.to_string(),
-    };
-    let t2 = thread::spawn(|| run_job(run_cfg));
-    let mut right = work.clone();
-    right.push("right\\");
-    fs::remove_dir_all(&right).unwrap();
-    fs::DirBuilder::new()
-        .recursive(true)
-        .create(&right)
-        .unwrap();
-    let job = para_change(para.name, para.right, &right, &stream);
-    let run_cfg = RunCfg {
-        dir: right,
-        job: job.to_string_lossy().to_string(),
-        env: env_path.to_string(),
-        bin: bin_path.to_string(),
-    };
-    let t3 = thread::spawn(|| run_job(run_cfg));
-    t1.join().unwrap();
-    t2.join().unwrap();
-    t3.join().unwrap();
 }
 
 // return job name
