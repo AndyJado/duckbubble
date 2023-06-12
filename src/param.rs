@@ -31,6 +31,7 @@ pub fn ls_run(cfg: LsCfg, para: ParamCfg) {
     // modify file content
     let mut left = work.clone();
     left.push("left\\");
+    fs::remove_dir_all(&left).unwrap();
     fs::DirBuilder::new().recursive(true).create(&left).unwrap();
     let job = para_change(para.name.clone(), para.left, &left, &stream);
     let run_cfg = RunCfg {
@@ -42,6 +43,7 @@ pub fn ls_run(cfg: LsCfg, para: ParamCfg) {
     let t2 = thread::spawn(|| run_job(run_cfg));
     let mut right = work.clone();
     right.push("right\\");
+    fs::remove_dir_all(&right).unwrap();
     fs::DirBuilder::new()
         .recursive(true)
         .create(&right)
@@ -108,6 +110,10 @@ fn run_job(cfg: RunCfg) {
             "i=",
             &job,
             "memory=44m",
+            "&&",
+            // see lsdyna manual vol1 database option
+            "l2a",
+            "binout0000",
         ])
         .output()
         .unwrap();
