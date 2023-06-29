@@ -1,31 +1,10 @@
 [lsrun]
 env_path = "C:\\Program Files\\ANSYS Inc\\v221\\ansys\\bin\\winx64\\lsprepost47\\lsdynamsvar.bat"
 bin_path = "C:\\Program Files\\ANSYS Inc\\v221\\ansys\\bin\\winx64\\lsdyna_mpp_sp_msmpi.exe"
-job_path = "E:\\Users\\ADMIN\\Desktop\\6.1\\astm-3039\\2mms\\DFAILC\\run.key"
+job_path = "C:\\Users\\ADMIN\\Desktop\\dyna\\run.key"
 
 [param]
 # now we use real number
-name = "dfailc"
+name = "tsteel"
 # initial value is the one written in key file, however you need to define 2 boundary here
-left = -1.0
-right = 0.0
-
-[[parts]]
-name = "polo"
-mat = "steel"
-
-[[parts]]
-name = "car"
-mat = "steel"
-sec = "polo"
-
-[[node_sets]]
-name = "fixd"
-
-[[node_sets]]
-name = "speed"
-
-[[parts]]
-name = "soil"
-#default goes to part name, e.g. `mat = "soil"`
-
+paras =[2,2.5,3,3.5,4]
