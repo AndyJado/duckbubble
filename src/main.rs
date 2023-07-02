@@ -21,7 +21,7 @@ fn main() -> io::Result<()> {
 }
 
 fn run_para() -> io::Result<()> {
-    eprintln!("should be reading configuration from `dry.toml` in current dir");
+    eprintln!("reading configuration from `dry.toml` in current dir");
     let DynaConfig { lsrun, param, .. } = DynaConfig::read("dry.toml");
     ls_run(lsrun, param);
     Ok(())

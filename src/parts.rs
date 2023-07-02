@@ -38,8 +38,8 @@ pub enum ConfigErr {
 
 impl DynaConfig {
     pub fn read(path: &str) -> Self {
-        let ctn = fs::read_to_string(path).expect("!config read from toml file!");
-        toml::from_str(&ctn).expect("!read toml file from current dir!")
+        let ctn = fs::read_to_string(path).expect("toml file should be read");
+        toml::from_str(&ctn).expect("toml file content parsing err")
     }
 }
 
