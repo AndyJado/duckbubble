@@ -40,11 +40,13 @@ pub fn ls_run(cfg: LsCfg, paras: ParamCfg) {
         };
         tx.send(thread::spawn(|| run_job(run_cfg))).unwrap();
     }
-    eprintln!("`now you should see CPU running like a charm, just leave me alone, I won't run, or technically, I am..");
+    eprintln!(
+        "`now you should see CPU running like a charm, just leave me alone, I won't run, or I am.."
+    );
     rx.recv().unwrap().join().unwrap();
 }
 
-// return job name
+// read key file, change para, return job file path
 fn para_change(para_name: String, para_val: f64, dir: &PathBuf, stream: &Vec<u8>) -> PathBuf {
     let mut para_read = KeywordReader::new(stream);
     let mut new_k = dir.clone();
@@ -67,6 +69,7 @@ fn para_change(para_name: String, para_val: f64, dir: &PathBuf, stream: &Vec<u8>
     }
 }
 
+#[derive(Debug)]
 struct RunCfg {
     dir: PathBuf,
     job: String,
@@ -99,4 +102,26 @@ fn run_job(cfg: RunCfg) {
         ])
         .output()
         .unwrap();
+}
+
+pub fn run_ansa(cfg: LsCfg) {
+    let (tx, rx) = channel();
+    let entrys = fs::read_dir(".").unwrap();
+    for entry in entrys {
+        let p = entry.unwrap().path();
+        if p.is_dir() {
+            let mut job = p.clone();
+            job.push("run.key");
+            let run_cfg = RunCfg {
+                dir: p,
+                job: job.into_os_string().into_string().unwrap(),
+                env: cfg.env_path.clone(),
+                bin: cfg.bin_path.clone(),
+            };
+            dbg!(&run_cfg);
+            tx.send(thread::spawn(|| run_job(run_cfg))).unwrap();
+        }
+    }
+    eprintln!("`now you should see CPU running like a charm, just leave me alone, I won't run");
+    rx.recv().unwrap().join().unwrap();
 }

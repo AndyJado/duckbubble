@@ -1,7 +1,7 @@
 use duckbubble::{
     boys::{ArgBoy, Argommand, DirWalker, KeyPath, RepoBoy},
     orwritekey::{KeywordReader, PartReader},
-    param::ls_run,
+    param::{ls_run, run_ansa},
     parts::{DynaConfig, KeyCell, KeyId, Part},
 };
 use std::{
@@ -17,7 +17,15 @@ fn main() -> io::Result<()> {
         Argommand::Init => repoboy.init(),
         Argommand::Link => link_dyna_repo(repoboy),
         Argommand::Para => run_para(),
+        Argommand::Ansa => ansa_para(),
     }
+}
+
+fn ansa_para() -> io::Result<()> {
+    eprintln!("reading configuration from `dry.toml` in current dir");
+    let DynaConfig { lsrun, .. } = DynaConfig::read("dry.toml");
+    run_ansa(lsrun);
+    Ok(())
 }
 
 fn run_para() -> io::Result<()> {

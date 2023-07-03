@@ -11,6 +11,7 @@ pub enum Argommand {
     Init,
     Link,
     Para,
+    Ansa,
 }
 
 #[derive(Debug)]
@@ -44,7 +45,7 @@ impl ArgBoy {
         self.0.next();
         match self.0.next() {
             Some(ref s) => s.parse().expect("should parse arg"),
-            None => Argommand::Para,
+            None => Argommand::Ansa,
         }
     }
 }
